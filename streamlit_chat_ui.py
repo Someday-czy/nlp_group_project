@@ -78,16 +78,22 @@ def render_sidebar():
                 st.markdown(f"**{group_name}**")
                 for filename in filenames:
                     title = conv_utils.get_title_from_filename(filename)
+                    # 检查当前对话是否为选中对话，以决定按钮样式
+                    is_selected = (filename == st.session_state.get("current_conversation"))
+                    button_type = "primary" if is_selected else "secondary"
+
                     col1, col2 = st.columns([4, 1])
                     with col1:
-                        if st.button(title, key=f"load_{filename}", use_container_width=True, type="secondary"):
-                            loaded_messages = conv_utils.load_conversation(filename)
-                            if loaded_messages:
-                                st.session_state.messages = loaded_messages
-                                st.session_state.current_conversation = filename
-                                st.session_state.system_prompt = loaded_messages[0].get("content",
-                                                                                        "你是一个得力的AI助手。")
-                            st.rerun()
+                        if st.button(title, key=f"load_{filename}", use_container_width=True, type=button_type):
+                            # 仅当点击的不是当前已选中的对话时才重新加载，避免不必要的操作
+                            if not is_selected:
+                                loaded_messages = conv_utils.load_conversation(filename)
+                                if loaded_messages:
+                                    st.session_state.messages = loaded_messages
+                                    st.session_state.current_conversation = filename
+                                    st.session_state.system_prompt = loaded_messages[0].get("content",
+                                                                                            "你是一个得力的AI助手。")
+                                st.rerun()
                     with col2:
                         if st.button("🗑️", key=f"delete_{filename}", use_container_width=True, type="secondary"):
                             conv_utils.delete_conversation(filename)
