@@ -80,11 +80,11 @@ def render_sidebar():
                     title = conv_utils.get_title_from_filename(filename)
                     # 检查当前对话是否为选中对话，以决定按钮样式
                     is_selected = (filename == st.session_state.get("current_conversation"))
-                    button_type = "primary" if is_selected else "secondary"
+                    # button_type = "primary" if is_selected else "secondary"
 
                     col1, col2 = st.columns([4, 1])
                     with col1:
-                        if st.button(title, key=f"load_{filename}", use_container_width=True, type=button_type):
+                        if st.button(title, key=f"load_{filename}", use_container_width=True, type="primary" if is_selected else "secondary"):
                             # 仅当点击的不是当前已选中的对话时才重新加载，避免不必要的操作
                             if not is_selected:
                                 loaded_messages = conv_utils.load_conversation(filename)
@@ -159,8 +159,13 @@ def main():
                     new_filename = f"{title}_{timestamp}.json"
                     rename_success = conv_utils.rename_conversation(default_filename, new_filename)
                     if rename_success:
+                        # 关键：更新 session_state 中的文件名
                         st.session_state.current_conversation = new_filename
+                        # 关键：重新加载消息（确保文件名已更新）
+                        st.session_state.messages = conv_utils.load_conversation(new_filename)
                         st.toast(f"对话标题已更新: {title}")
+                        # 立即停止执行，让 Streamlit 完全重新渲染
+                        st.rerun()
                     else:
                         st.warning("重命名文件失败，已保留默认标题。")
                 else:
